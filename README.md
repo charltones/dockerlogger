@@ -94,3 +94,7 @@ _and this to drop by number_
 _Use ab to throw some traffic at the server_
 
 `ab -n 1000 http://<ip>:8080/`
+
+_To stop the server from getting blocked, just add this line to the ECS Task Definition log configuration options section:_
+
+`"mode": "non-blocking"`
