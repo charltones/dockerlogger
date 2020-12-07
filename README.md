@@ -1,67 +1,69 @@
 Steps:
 
-# try the file locally first - I ran all this on a Cloud9 machine
-./logger.py
-# you should be able to curl localhost:8080
+_try the file locally first - I ran all this on a Cloud9 machine_
+`./logger.py`
+_you should be able to curl localhost:8080_
 
-# build a docker container
-docker build -t logtest .
+_build a docker container_
+`docker build -t logtest .`
 
-# test the docker container locally
-docker run -p 8080:8080 logtest
-# you should be able to curl localhost:8080
+_test the docker container locally_
+`docker run -p 8080:8080 logtest`
+_you should be able to:_
+`curl localhost:8080`
 
-# check the docker image is there
-docker images
+_check the docker image is there_
+`docker images`
 
-# create an ECR repo
-aws ecr create-repository --repository-name logtest
+_create an ECR repo_
+`aws ecr create-repository --repository-name logtest`
 
-# command line login foo for ECR
-aws ecr get-login --no-include-email
+_command line login foo for ECR_
+`aws ecr get-login --no-include-email`
 
-# <run the output of the last command>
+_<run the output of the last command>_
 
-# tag image to your ECR repo
-docker tag logtest <account>.dkr.ecr.eu-west-1.amazonaws.com/logtest
+_tag image to your ECR repo_
+`docker tag logtest <account>.dkr.ecr.eu-west-1.amazonaws.com/logtest`
 
-# push image up - do this every time you change it
-docker push <account>.dkr.ecr.eu-west-1.amazonaws.com/logtest
+_push image up - do this every time you change it_
+`docker push <account>.dkr.ecr.eu-west-1.amazonaws.com/logtest`
 
-# check image is there
-aws ecr describe-images --repository-name logtest
+_check image is there_
+`aws ecr describe-images --repository-name logtest`
 
-# create an ECS cluster
-aws ecs create-cluster --cluster-name logtest  
+_create an ECS cluster_
+`aws ecs create-cluster --cluster-name logtest`
 
-# find AMI ID of ECS ready AMI
-aws ssm get-parameters --names /aws/service/ecs/optimized-ami/amazon-linux/recommended
+_find AMI ID of ECS ready AMI_
+`aws ssm get-parameters --names /aws/service/ecs/optimized-ami/amazon-linux/recommended`
 
-# start an EC2 instance (you will need to edit this script)
-./launch-instance.sh
-<wait for it to join cluster>
+_start an EC2 instance (you will need to edit this script)_
+`./launch-instance.sh`
+_<wait for it to join cluster>_
 
-# register task defn with ECS (need to edit the file too)
-aws ecs register-task-definition --cli-input-json file://ecs-task-definition.json
+_register task defn with ECS (need to edit the file too)_
+`aws ecs register-task-definition --cli-input-json file://ecs-task-definition.json`
 
-# create the log group in CWL
-<create the log group>
+_create the log group in CWL_
+_<create the log group>_
 
-# start the ECS task - takes a few seconds to come up
-aws ecs run-task --cluster arn:aws:ecs:eu-west-1:<account>:cluster/logtest --task-definition arn:aws:ecs:eu-west-1:<account>:task-definition/logtest-task:1 <-- the number depends on the version of task defn
+_start the ECS task - takes a few seconds to come up_
+`aws ecs run-task --cluster arn:aws:ecs:eu-west-1:<account>:cluster/logtest --task-definition arn:aws:ecs:eu-west-1:<account>:task-definition/logtest-task:1 <-- the number depends on the version of task defn`
 
-# you should be able to ssh into the ECS instance machine, once there this will show you connections made - one will be to CWL
-sudo netstat -t
+_you should be able to ssh into the ECS instance machine, once there this will show you connections made - one will be to CWL_
+`sudo netstat -t`
 
-# iptables can cut the connections to CWL. Adding an entry to /etc/hosts for:
-52.95.125.162	logs.eu-west-1.amazonaws.com
-# will stop you having to block more IPs
-sudo iptables -A OUTPUT -p tcp -d <ip> --dport 443 -j DROP
+_iptables can cut the connections to CWL. Adding an entry to /etc/hosts for:_
+`52.95.125.162	logs.eu-west-1.amazonaws.com`
+_will stop you having to block more IPs_
+`sudo iptables -A OUTPUT -p tcp -d <ip> --dport 443 -j DROP`
 
-# to undo the iptables work, use this to view the rules
-sudo iptables -L --line-numbers
+_to undo the iptables work, use this to view the rules_
+`sudo iptables -L --line-numbers`
 
-# and this to drop by number
-sudo iptables -D OUTPUT 1
+_and this to drop by number_
+`sudo iptables -D OUTPUT 1`
 
-ab -n 1000 http://<ip>:8080/
+_Use ab to throw some traffic at the server_
+`ab -n 1000 http://<ip>:8080/`
